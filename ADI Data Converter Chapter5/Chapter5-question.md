@@ -91,3 +91,12 @@ Flash ADC？
 FIR滤波器的脉冲响应是有限长的，根据脉冲响应值能够直接构建FIR滤波器。
 
 ## 34."Although "complex" ADCs are not available, it is very common to use two ADCs to synchronously sample the I and Q data streams from a quadrature demodulator, in which the FFT input data is complex — however, this is a special case."
+
+这里应该是信号的IQ分解？窄带信号可以分解：
+$$X(t)=X_{I}(t)cos\omega_0 t-X_Q (t)sin\omega_0 t$$
+
+## 35."repetitive patterns"的影响
+
+如果采到的数据在一个FFT周期内是周期重复的，那么量化噪声也是周期重复的，丧失了随机性。
+
+同时，对谐波有什么影响。
