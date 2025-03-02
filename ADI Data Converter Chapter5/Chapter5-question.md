@@ -128,8 +128,6 @@ $$X(t)=X_{I}(t)cos\omega_0 t-X_Q (t)sin\omega_0 t$$
 
 ## 36.什么时候需要修改"default value"
 
-难道是点数过少的时候？信号附近本来就没几个bin了（
-
 ## 37.为什么使用6dB attenuator
 
 将输出彼此隔离开来，防止交叉调制。
