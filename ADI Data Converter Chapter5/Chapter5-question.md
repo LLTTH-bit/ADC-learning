@@ -1,6 +1,8 @@
 # ADI Chapter5 question
 
-## 11.输入参考噪声相关
+## 11.输入参考噪声相关（排除量化噪声可以理解为INL的相关部分吗）
+
+这里我觉得是除去量化噪声以外的全部噪声。经问之后，INL会放大输入的噪声。
 
 ## 12.为什么使用反码？serial format
 
@@ -32,6 +34,8 @@ serial format的问题，我理解是，ADC输出结果是串行输出的，需�
 
 ## 18.背对背测试中DAC性能高于ADC
 
+书中提到，分辨率和直流、交流性能都要高于待测ADC。
+
 ## 19.DNL与INL测试使用的输入
 
 为什么使用的输入不同？一个是"low amplitude"，一个是"full_scale"？
@@ -40,7 +44,7 @@ serial format的问题，我理解是，ADC输出结果是串行输出的，需�
 
 ## 20."As the ADC resolution is increased, the frequency of the input signal must be made lower, the amplitude of the error waveform decreases, and the effects of ADC noise and DAC errors become more pronounced."这几句话的逻辑关系
 
-**问** 我不太理解，个人推测是：随着分辨率升高，能够得到的ADC采样率自然会降低（高速高精度不可能兼得？），因此输入频率就需要下降。而误差波形的幅度下降是因为分辨率上升导致的。噪声影响增大应该也是因为分辨率上升，一个LSB对应的电压更小，因此更容易受影响吧。
+个人推测是：随着分辨率升高，能够得到的ADC采样率自然会降低（高速高精度不可能兼得？），因此输入频率就需要下降。而误差波形的幅度下降是因为分辨率上升导致的。噪声影响增大应该也是因为分辨率上升，一个LSB对应的电压更小，因此更容易受影响吧。
 
 ## 21.为什么输入信号overdrive
 
@@ -64,9 +68,12 @@ sin里面 $\frac{\pi}{2}$ 前面的因子是 除去两端区间后的点数 占�
 ![Figure.2](deglitcher-figure-2.png)
 在更新码字前闭合SW1，在更新码字时断开SW1，在毛刺消失后重新闭合SW1。
 
-## 25.Is there any ADC that is not sampling ADC?
+## 25. Is there any ADC that is not sampling ADC?
 
 Flash ADC？
+
+>ADI MT020:
+此外，各个比较器固有“采样保持”功能，因此理论上，只要比较器完全动态匹配， ash转换器就无需单独的SHA。不过实际操作中，由于比较器之间不可避免地存在细微时序不匹配，因此大多数flash转换器通常都需要添加合适的外部采样保持电路来改善动态性能。
 
 ## 26."The output low-pass filter is chosen to have a cut-off frequency of approximately fs/2.2K so that images are attenuated over the bandwidth of interest. "
 
@@ -74,7 +81,13 @@ Flash ADC？
 
 ## 27.关于包络测试
 
+K=2的时候，相当于重建频率是$f_s/2$，那么重建的信号频率就是$\Delta f$。
+
 ## 28.背对背测试装置测试带宽相关
+
+这里就相当于，DAC充当了FFT的职能。先把输入信号调整到低频，DAC输出的信号几乎没有削波；然后提高输入频率，再调整输入幅度，直到DAC输出的信号幅度和之前类似。输出同样的幅度，需要的信号电平增加了，说明ADC的增益降低了。通过输入幅度的变化能够估计带宽。测试频率能超过奈奎斯特频率，因为这个测试只是为了测试带宽。
+
+同样这个测试也能用于小信号带宽。把大信号的“几乎不发生削波”改成“恰好能激活规定数目的码字”即可。
 
 ## 29."end-to-end"是什么意思
 
@@ -82,9 +95,21 @@ Flash ADC？
 
 ## 30.如何推导式5.21
 
-## 31.关于式5.21
+式5.21：$ENOB=N-log_2[\frac{Q_A}{Q_T}]$
+
+这里应该是区别于$ENOB=\frac{SINAD-1.76dB}{6.02dB}$的另一个定义，认为整个ADC系统的噪声额度即为量化噪声。总的噪声与量化噪声值相等时，ENOB就等于输出的位数。随着噪声功率下降，ENOB也下降。
+
+## 31.关于式5.21的理解
+
+我认为这里应该不是“理想的量化误差和实际的量化误差”的关系。这里输入的并非三角波而是正弦波，而$Q_A$也不是“实际的量化误差”，而是量化噪声和其他噪声的总和。
+
+这里应该是直接把$\frac{\Delta}{\sqrt{12}}$当作量化噪声rms值，然后进行计算。
+
+>ADI MT-001和Bennett的论文中都说了这点，后者说“ Except for very special types of signals, the error samples are uniformly distributed throughout the range from minus half a step to plus half a step. ”
 
 ## 32.如何理解式5.23
+
+此处的level of signal below FS应该是实际的输入信号比满量程信号低的dB。这会导致SINAD也低相同的dB，因此需要补偿上。
 
 ## 33.解释这句话："Digital filters can be constructed based on their impulse response, because the coefficients of an FIR filter and its impulse response are identical."
 
@@ -99,4 +124,84 @@ $$X(t)=X_{I}(t)cos\omega_0 t-X_Q (t)sin\omega_0 t$$
 
 如果采到的数据在一个FFT周期内是周期重复的，那么量化噪声也是周期重复的，丧失了随机性。
 
-同时，对谐波有什么影响。
+同时，由于量化噪声是周期的，那么会产生对应频率的谐波。（量化噪声形式不确定，产生谐波也是正常的。）
+
+## 36.什么时候需要修改"default value"
+
+难道是点数过少的时候？信号附近本来就没几个bin了（
+
+## 37.为什么使用6dB attenuator
+
+将输出彼此隔离开来，防止交叉调制。
+
+## 38.为什么这样接电阻
+
+衰减器的输出电阻是50欧，与25欧串联后变为75欧。三个75欧并联后为25欧，再与25欧串联得到50欧。这样衰减器输出电阻为50欧。
+
+## 39.图5.72的overdrive
+
+这里应该是说老的频谱仪对过高的输入幅度比较敏感，输入过高可能会对仪器造成损坏。
+
+## 40."The residual signal inside the notch after passing through the transmission system represents clipping noise, thermal noise, and IMD distortion products." clipping noise指什么？
+
+clipping noise应该指的是削波噪声，可能是因为信号经过放大后达到了VDD使得信号被削顶，引入噪声。
+
+## 41.图 5.76， 什么是"locked-histogram"？为什么要⽤同⼀个 low-jitter clock generator 产⽣两路信号？这两路信号之间有什么区别？为什么时钟 jitter 同 adc 内部的 jitter ⽆法区分？
+
+locked-histogram 指的是用直方图法测量抖动引起的噪声，推测"locked"指的是采样时钟和输入信号的相位锁定？
+
+使用同一个信号发生器，是为了让时钟和输入信号具有相同的相位，这样采样的时候输入信号正好处于过零点。
+
+两路信号一个是方波，一个是经过了滤波器后得到的正弦波。
+
+因为时钟jitter和内部jitter都是在采样时造成的，故而无法区分？
+
+## 42.flat强调什么？
+
+在波形建立后波动要小，保证波动在1LSB以内使得码字不会再闪烁。
+
+## 43.测INL/DNL的准备工作
+
+根据第一个转换点测出offset error，根据第一个和最后一个转换点测出gain error。
+
+## 47.假设ADC静态测试使用斜坡信号，为了达到0.01LSB的精度，对斜坡信号有什么要求？
+
+生成斜坡信号的DAC的位数至少比ADC多7位：1/2^7 = 0.0078125.每个区间内的点数大于455（1/0.0022）.
+
+## 48.为了保证静态测试的静态性， 斜坡信号的 update 周期有什么要求？
+
+为了保持静态，生成输入信号的DAC频率应该比ADC采样频率低。
+
+## 49.使⽤ histogram+sin 波测试 inl/dnl 的原理是什么？为什么要⽤ sin 波⽽不⽤ ramp？
+
+输入sin波，能写出输入的概率密度函数。通过一段时间采集大量的点，再根据概率密度函数计算每个码字对应的点数的理论值，根据实际采到的点数能够计算出DNL；累加就能得到DNL。
+
+采用sin的原因是：三角波的高频噪声不能通过滤波移除，但我们通过恰当的滤波能得到高线性度和低噪声的正弦波。
+
+## 50.既然 sin 波可以同时⽤于动态和静态测试，那么⽤于动态和静态测试的正弦波在频率上有何不同？
+
+在静态测试中，输入频率不能是
+
+## 51.已知采样频率和FFT点数，如何确定输入信号的频率？
+
+每根谱线之间的频率间隔是$f_s/N$，如果是相干采样能够看到明显的单独谱线；如果是非相干采样找最高的谱线，实际输入频率在其附近。
+
+## 52.erbw 的定义是什么？为什么 adc 的性能会随着频率的上升⽽下降？
+
+ERBW定义是SINAD下降3db时候的输入带宽。
+
+推测是ADC采样电路的带宽限制了整体的带宽？
+
+## 53.如何通过 ADC 输入短接时的噪声的 RMS 值来推导 ADC 的 ENOB
+
+短接时算不出来信噪比，应该可以使用直方图方法计算噪声功率，使用式：$ENOB=N-log_2[\frac{Q_A}{Q_T}]$ 来计算
+
+## 54.What is a DDS?
+
+![DDS](DDS.png)
+
+通过读取存储好的波形，重建，可以得到正弦波或任意波形的模拟输出。
+
+## 55.什么是"overvoltage recovery time"
+
+当方波的负电压在ADC输入范围以下时，ADC需要的建立时间。
