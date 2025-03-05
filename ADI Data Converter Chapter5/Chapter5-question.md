@@ -124,7 +124,7 @@ $$ENOB=log_2(\frac{FSR}{NAD\sqrt{12}})\approx N-log_2(\frac{NAD}{\epsilon_Q})$$
 SNR差值：$\Delta SNR = 20lg\frac{Q_A+Q_T}{Q_T}$
 则实际的ENOB：$ENOB=\frac{SNR-1.76-\Delta SNR}{6.02}$
 把$\Delta$项提出来，$\Delta SNR/6.02 = \Delta/20lg2 = \frac{lg\frac{Q_A+Q_T}{Q_T}}{lg2}$，又：实际的ADC中$Q_A \gg Q_T$，可以化简为：$\frac{lg\frac{Q_A}{Q_T}}{lg2}=log_2\frac{Q_A}{Q_T}$
-则$ENOB=N-lg_2\frac{Q_A}{Q_T}$
+则$ENOB=N-log_2\frac{Q_A}{Q_T}$
 
 ## 31.关于式5.21的理解
 
