@@ -22,6 +22,9 @@ serial format的问题，我理解是，ADC输出结果是串行输出的，需�
 
 在ADC的输出码字驱动DAC之前，先取补码，这样DAC输出电压就是ADC输出取负之后的结果，再与输入相加就能实现波形相减。
 
+>进一步说明：
+看过解答后发现这里需要多考虑。如果是unipolar信号，这时候需要对DAC的参考源做改动，使用$[-V_{REF},0]$的参考电源；如果是bipoolar信号那么直接取反即可。
+
 ## 16.减小DAC频率
 
 从结果上看，减小DAC频率也就相当于减小了采样频率。但我理解，如果想让“错误波形”看起来是连续的，采样频率应该本身就比斜坡信号的频率高很多，因此降低DAC频率也没有太大影响，如果降低太多就可能看起来不连贯了。
@@ -36,6 +39,8 @@ serial format的问题，我理解是，ADC输出结果是串行输出的，需�
 
 书中提到，分辨率和直流、交流性能都要高于待测ADC。
 
+>更正：静态性能高，也就是分辨率高，即可。
+
 ## 19.DNL与INL测试使用的输入
 
 为什么使用的输入不同？一个是"low amplitude"，一个是"full_scale"？
@@ -46,9 +51,13 @@ serial format的问题，我理解是，ADC输出结果是串行输出的，需�
 
 个人推测是：随着分辨率升高，能够得到的ADC采样率自然会降低（高速高精度不可能兼得？），因此输入频率就需要下降。而误差波形的幅度下降是因为分辨率上升导致的。噪声影响增大应该也是因为分辨率上升，一个LSB对应的电压更小，因此更容易受影响吧。
 
+>补充：动态的非理想性都不要出现，因此输入的正弦波频率要非常低。
+
 ## 21.为什么输入信号overdrive
 
 为了保证ADC量程内的信号具有比较高的线性度。
+
+>补充：应该理解的没问题。如果没有overdrive，边缘区间上hit的点数可能比中间区间上hit的点数少。
 
 ## 22.Nonmonotonic相关
 
@@ -95,9 +104,27 @@ K=2的时候，相当于重建频率是$f_s/2$，那么重建的信号频率就�
 
 ## 30.如何推导式5.21
 
+>mark一下，等会儿回来解决这个问题。包括31
+
 式5.21：$ENOB=N-log_2[\frac{Q_A}{Q_T}]$
 
 这里应该是区别于$ENOB=\frac{SINAD-1.76dB}{6.02dB}$的另一个定义，认为整个ADC系统的噪声额度即为量化噪声。总的噪声与量化噪声值相等时，ENOB就等于输出的位数。随着噪声功率下降，ENOB也下降。
+
+>更正：
+IEEE standard 1057中给出式子：
+$$ENOB=log_2(\frac{FSR}{NAD\sqrt{12}})\approx N-log_2(\frac{NAD}{\epsilon_Q})$$
+量化噪声是$\Delta/\sqrt{12}$，因此无噪情况下计算得到就是N。
+
+但实际上是同一个式子，有具体推导：
+
+>具体推导：
+熟知的公式：$ENOB = \frac{SNR-1.76}{6.02}$
+理论上的SNR：$SNR=20lg\frac{A_S}{Q_T}$
+实际上的SNR：$SNR=20lg\frac{A_S}{Q_A+Q_T}$
+SNR差值：$\Delta SNR = 20lg\frac{Q_A+Q_T}{Q_T}$
+则实际的ENOB：$ENOB=\frac{SNR-1.76-\Delta SNR}{6.02}$
+把$\Delta$项提出来，$\Delta SNR/6.02 = \Delta/20lg2 = \frac{lg\frac{Q_A+Q_T}{Q_T}}{lg2}$，又：实际的ADC中$Q_A \gg Q_T$，可以化简为：$\frac{lg\frac{Q_A}{Q_T}}{lg2}=log_2\frac{Q_A}{Q_T}$
+则$ENOB=N-lg_2\frac{Q_A}{Q_T}$
 
 ## 31.关于式5.21的理解
 
@@ -128,9 +155,13 @@ $$X(t)=X_{I}(t)cos\omega_0 t-X_Q (t)sin\omega_0 t$$
 
 ## 36.什么时候需要修改"default value"
 
+>这里讲的就是各种窗函数对主瓣的展宽系数，Hann窗把1个bin展成3个。
+
 ## 37.为什么使用6dB attenuator
 
 将输出彼此隔离开来，防止交叉调制。
+
+>控制幅度；隔离；阻抗匹配；其他还常用1dB和10dB.
 
 ## 38.为什么这样接电阻
 
@@ -140,9 +171,14 @@ $$X(t)=X_{I}(t)cos\omega_0 t-X_Q (t)sin\omega_0 t$$
 
 这里应该是说老的频谱仪对过高的输入幅度比较敏感，输入过高可能会对仪器造成损坏。
 
+>解答给出的图中，提高0.1dB的信号幅度，奇次谐波会增加很多！
+![overdrive](overdrive.png)
+
 ## 40."The residual signal inside the notch after passing through the transmission system represents clipping noise, thermal noise, and IMD distortion products." clipping noise指什么？
 
 clipping noise应该指的是削波噪声，可能是因为信号经过放大后达到了VDD使得信号被削顶，引入噪声。
+
+>输入信号幅度过大，内部电路会失真。
 
 ## 41.图 5.76， 什么是"locked-histogram"？为什么要⽤同⼀个 low-jitter clock generator 产⽣两路信号？这两路信号之间有什么区别？为什么时钟 jitter 同 adc 内部的 jitter ⽆法区分？
 
@@ -178,7 +214,9 @@ locked-histogram 指的是用直方图法测量抖动引起的噪声，推测"lo
 
 ## 50.既然 sin 波可以同时⽤于动态和静态测试，那么⽤于动态和静态测试的正弦波在频率上有何不同？
 
-在静态测试中，输入频率不能是
+>补充：
+静态测试时，正弦波频率要足够低，且要相干采样（应该是确保采了整数个周期）；要过驱动。
+动态测试时，满足相干采样，不能过驱动。
 
 ## 51.已知采样频率和FFT点数，如何确定输入信号的频率？
 
@@ -203,3 +241,5 @@ ERBW定义是SINAD下降3db时候的输入带宽。
 ## 55.什么是"overvoltage recovery time"
 
 当方波的负电压在ADC输入范围以下时，ADC需要的建立时间。
+
+>过电压后，ADC恢复到指定的精度需要的时间。
