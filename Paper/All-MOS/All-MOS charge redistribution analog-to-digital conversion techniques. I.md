@@ -149,6 +149,9 @@ $$\tau_! = R_{ON_G}C_T = \frac{C_T}{\mu \frac{w}{L_c}C_0 (V_{GS}(ON)-V_T)}$$
 
 $$V_E = \frac{C_{GS}}{C_T}(V_{GS}(ON)-V_T)$$
 
+>这里是电荷注入！Razavi 13章开关电容相关内容有讲。
+反型层的电荷为：$WLC_{OX}(V_{DD}-V_{in}-V_{TH})$，在开关断开后会通过源端和漏端流出。对于这里，简单认为流到电容阵上的电荷为：$C_{GS}[V_{GS}(ON)-V_T]$（下面有讲）。电荷量除以$C_T$就是造成的电压的误差。
+
 因此：
 
 $$V_E \tau_1 = \frac{C_{GS}}{\mu \frac{w}{L_C}C_0} \simeq \frac{L_C^2}{\mu}$$
